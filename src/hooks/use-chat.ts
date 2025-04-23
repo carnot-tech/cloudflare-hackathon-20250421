@@ -14,7 +14,7 @@ export const useChat = (isSpeakerOn = true) => {
 
   const [isComposing, setIsComposing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { speak } = useTextToSpeech();
+  const { speak, stop } = useTextToSpeech();
   const lastMessageRef = useRef<string>("");
   const lastMessageIdRef = useRef<string>("");
   const hasSpokenRef = useRef<boolean>(false);
@@ -24,22 +24,18 @@ export const useChat = (isSpeakerOn = true) => {
   }, []);
 
   useEffect(() => {
-    // 新しいAIメッセージが追加されたときに音声を再生
     const lastMessage = vercelMessages[vercelMessages.length - 1];
     if (lastMessage?.role === "assistant" && isSpeakerOn) {
-      // 新しいメッセージの場合
       if (lastMessage.id !== lastMessageIdRef.current) {
         lastMessageIdRef.current = lastMessage.id;
         lastMessageRef.current = lastMessage.content;
         hasSpokenRef.current = false;
       }
-      // 既存のメッセージが更新された場合
       else if (lastMessage.content !== lastMessageRef.current) {
         lastMessageRef.current = lastMessage.content;
         hasSpokenRef.current = false;
       }
 
-      // ストリーミングが完了し、まだ音声を再生していない場合
       if (!isLoading && !hasSpokenRef.current && lastMessage.content === lastMessageRef.current) {
         hasSpokenRef.current = true;
         speak(lastMessage.content);
@@ -50,12 +46,18 @@ export const useChat = (isSpeakerOn = true) => {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey && !isComposing) {
       e.preventDefault();
+      stop();
       handleSubmit(e);
     }
   };
 
   const setInputValue = (value: string) => {
     handleInputChange({ target: { value } } as React.ChangeEvent<HTMLTextAreaElement>);
+  };
+
+  const sendMessage = (content: string) => {
+    stop();
+    append({ role: "user", content });
   };
 
   return {
@@ -74,7 +76,7 @@ export const useChat = (isSpeakerOn = true) => {
     setIsComposing,
     isLoading,
     messagesEndRef,
-    sendMessage: (content: string) => append({ role: "user", content }),
+    sendMessage,
     handleKeyPress,
   };
 }; 

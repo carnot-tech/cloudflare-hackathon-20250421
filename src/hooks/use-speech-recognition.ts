@@ -1,7 +1,9 @@
 import { useState, useRef, useCallback } from "react";
 import type { SpeechRecognition, SpeechRecognitionEvent, SpeechRecognitionErrorEvent } from "@/types/chat";
 
-export const useSpeechRecognition = (onFinalTranscript: (transcript: string) => void) => {
+export type Language = "en-US" | "ja-JP";
+
+export const useSpeechRecognition = (onFinalTranscript: (transcript: string) => void, language: Language = "en-US") => {
   const [isRecording, setIsRecording] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -13,7 +15,7 @@ export const useSpeechRecognition = (onFinalTranscript: (transcript: string) => 
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = false;
       recognitionRef.current.interimResults = true;
-      recognitionRef.current.lang = "en-US";
+      recognitionRef.current.lang = language;
 
       recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
         const transcript = Array.from(event.results)
@@ -42,10 +44,10 @@ export const useSpeechRecognition = (onFinalTranscript: (transcript: string) => 
         setInterimTranscript("");
       };
     }
-  }, [onFinalTranscript]);
+  }, [onFinalTranscript, language]);
 
   const startRecording = useCallback(() => {
-    if (!recognitionRef.current) {
+    if (!recognitionRef.current || recognitionRef.current.lang !== language) {
       initializeRecognition();
     }
     if (recognitionRef.current) {
@@ -53,7 +55,7 @@ export const useSpeechRecognition = (onFinalTranscript: (transcript: string) => 
       recognitionRef.current.start();
       setIsRecording(true);
     }
-  }, [initializeRecognition]);
+  }, [initializeRecognition, language]);
 
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {

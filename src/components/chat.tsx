@@ -3,6 +3,7 @@
 import { Bot, Volume2, VolumeX } from "lucide-react";
 import { useChat } from "@/hooks/use-chat";
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
+import type { Language } from "@/hooks/use-speech-recognition";
 import { MessageList } from "@/components/message-list";
 import { ChatInput } from "@/components/chat-input";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { useState } from "react";
 
 export function Chat() {
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
+  const [language, setLanguage] = useState<Language>("en-US");
   const {
     messages,
     inputValue,
@@ -23,7 +25,8 @@ export function Chat() {
   } = useChat(isSpeakerOn);
 
   const { isRecording, toggleRecording } = useSpeechRecognition(
-    (transcript) => sendMessage(transcript)
+    (transcript) => sendMessage(transcript),
+    language
   );
 
   return (
@@ -36,6 +39,22 @@ export function Chat() {
             <h1 className="text-xl font-semibold">AI Chat</h1>
           </div>
           <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <Button
+                variant={language === "en-US" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setLanguage("en-US")}
+              >
+                EN
+              </Button>
+              <Button
+                variant={language === "ja-JP" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setLanguage("ja-JP")}
+              >
+                日本語
+              </Button>
+            </div>
             <Button
               variant={isSpeakerOn ? "default" : "outline"}
               size="icon"
@@ -51,14 +70,12 @@ export function Chat() {
         </div>
       </div>
 
-      {/* メッセージ表示エリア */}
       <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-4xl mx-auto">
           <MessageList messages={messages} messagesEndRef={messagesEndRef} />
         </div>
       </div>
 
-      {/* 入力エリア */}
       <div className="bg-white border-t p-4">
         <div className="max-w-4xl mx-auto">
           <ChatInput

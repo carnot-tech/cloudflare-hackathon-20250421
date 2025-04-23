@@ -26,17 +26,16 @@ const exaAiMcpClient = createMCPClient({
 	}),
 });
 
+const playwrightClient = await playwrightMcpClient;
+const playwrightTools = await playwrightClient.tools();
+const exaClient = await exaAiMcpClient;
+const exaTools = await exaClient.tools();
 
 const app = new OpenAPIHono().post("/", async (c) => {
 	const { messages } = await c.req.json();
 	if (!messages) {
 		return c.json({ error: "No messages provided" }, 400);
 	}
-
-	const playwrightClient = await playwrightMcpClient;
-	const playwrightTools = await playwrightClient.tools();
-	const exaClient = await exaAiMcpClient;
-	const exaTools = await exaClient.tools();
 
 	return createDataStreamResponse({
 		execute: (dataStream) => {
